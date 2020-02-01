@@ -94,6 +94,12 @@ jobs:
         cd openwrt
         make -j1 V=s
 
+    - name: Extract Gzip Images
+      run: |
+        cd openwrt/bin/targets/brcm2708/bcm2710/
+        gzip openwrt-brcm2708-bcm2710-rpi-3-squashfs* -d
+        gzip openwrt-brcm2708-bcm2710-rpi-3-ext4* -d
+
     - name: Upload Config
       uses: actions/upload-artifact@master
       with:
@@ -121,32 +127,32 @@ jobs:
     - name: Upload RootFS Archive
       uses: actions/upload-artifact@master
       with:
-        name: openwrt-brcm2708-bcm2710-rpi-3-rootfs.tar.gz
+        name: openwrt-brcm2708-bcm2710-rpi-3-rootfs.tar.gz.zip
         path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-rootfs.tar.gz
         
     - name: Upload SquashFS Factory Image
       uses: actions/upload-artifact@master
       with:
-        name: openwrt-brcm2708-bcm2710-rpi-3-squashfs-factory.img.gz
-        path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-squashfs-factory.img.gz
+        name: openwrt-brcm2708-bcm2710-rpi-3-squashfs-factory.img.zip
+        path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-squashfs-factory.img
         
     - name: Upload SquashFS Sysupgrade Image
       uses: actions/upload-artifact@master
       with:
-        name: openwrt-brcm2708-bcm2710-rpi-3-squashfs-sysupgrade.img.gz
-        path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-squashfs-sysupgrade.img.gz
+        name: openwrt-brcm2708-bcm2710-rpi-3-squashfs-sysupgrade.img.zip
+        path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-squashfs-sysupgrade.img
         
     - name: Upload Ext4 Factory Image
       uses: actions/upload-artifact@master
       with:
-        name: openwrt-brcm2708-bcm2710-rpi-3-ext4-factory.img.gz
-        path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-ext4-factory.img.gz
+        name: openwrt-brcm2708-bcm2710-rpi-3-ext4-factory.img.zip
+        path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-ext4-factory.img
         
     - name: Upload Ext4 Sysupgrade Image
       uses: actions/upload-artifact@master
       with:
-        name: openwrt-brcm2708-bcm2710-rpi-3-ext4-sysupgrade.img.gz
-        path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-ext4-sysupgrade.img.gz
+        name: openwrt-brcm2708-bcm2710-rpi-3-ext4-sysupgrade.img.zip
+        path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-ext4-sysupgrade.img
         
     - name: Upload Images Sha256sums
       uses: actions/upload-artifact@master
