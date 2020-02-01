@@ -6,7 +6,7 @@
 # Blog: https://p3terx.com
 #=================================================
 
-name: Build OpenWrt
+name: Build Offical OpenWrt
 
 on: 
   release:
@@ -15,7 +15,7 @@ on:
     branches: 
       - master
     paths:
-      - 'lean-openwrt.config'
+      - 'offical-openwrt.config'
 #  schedule:
 #    - cron: 0 8 * * 5
   watch:
@@ -48,7 +48,7 @@ jobs:
 
     - name: Clone source code
       env: 
-        REPO_URL: https://github.com/coolsnowwolf/lede
+        REPO_URL: https://github.com/openwrt/openwrt
         REPO_BRANCH: master
       run: git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
 
@@ -63,8 +63,8 @@ jobs:
 
     - name: Load custom configuration
       env:
-        CONFIG_FILE: 'lean-openwrt.config'
-        DIY_SH: 'lean-openwrt.sh'
+        CONFIG_FILE: 'offical-openwrt.config'
+        DIY_SH: 'offical-openwrt.sh'
       run: |
         [ -e files ] && mv files openwrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
