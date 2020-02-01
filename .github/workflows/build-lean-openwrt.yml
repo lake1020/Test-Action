@@ -6,7 +6,7 @@
 # Blog: https://p3terx.com
 #=================================================
 
-name: Build Lean's OpenWrt
+name: Build OpenWrt
 
 on: 
   release:
@@ -15,11 +15,11 @@ on:
     branches: 
       - master
     paths:
-      - 'lean-openwrt.config'
+      - '.config'
 #  schedule:
 #    - cron: 0 8 * * 5
-  watch:
-    types: [started]
+#  watch:
+#    types: [started]
 
 jobs:
   build:
@@ -52,6 +52,15 @@ jobs:
         REPO_BRANCH: master
       run: git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
 
+    - name: Update feeds
+      run: |
+       cd openwrt
+       echo "src-git lienol https://github.com/Lienol/openwrt-package" >> feeds.conf.default
+       ./scripts/feeds update -a
+
+    - name: Install feeds
+      run: cd openwrt && ./scripts/feeds install -a
+
     - name: Load custom configuration
       env:
         CONFIG_FILE: 'lean-openwrt.config'
@@ -60,19 +69,87 @@ jobs:
         [ -e files ] && mv files openwrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
         chmod +x $DIY_SH
-        ./$DIY_SH
-        
-    - name: Update feeds
-      run: cd openwrt && ./scripts/feeds update -a
+        cd openwrt
+        ../$DIY_SH
+        make defconfig
 
-    - name: Install feeds
-      run: cd openwrt && ./scripts/feeds install -a
-      
-    - name: Make defconfig
-      run: cd openwrt && make defconfig
+#    - name: SSH connection to Actions
+#      uses: P3TERX/debugger-action@master
 
-    - name: Upload .Config
+    - name: Download package
+      run: |
+        cd openwrt && make download -j8
+        find dl -size -1024c -exec ls -l {} \;
+        find dl -size -1024c -exec rm -f {} \;
+
+    - name: Multi-thread compile
+      run: |
+        cd openwrt
+        echo -e "$(nproc) thread compile"
+        make -j$(nproc)
+
+    - name: Single-thread compile
+      if: failure()
+      run: |
+        cd openwrt
+        make -j1 V=s
+
+    - name: Upload Config
       uses: actions/upload-artifact@master
       with:
-        name: .config
-        path: openwrt/.config
+        name: config.seed
+        path: openwrt/bin/targets/brcm2708/bcm2709/config.seed
+        
+    - name: Upload Packages
+      uses: actions/upload-artifact@master
+      with:
+        name: Packages
+        path: openwrt/bin/packages/arm_cortex-a7_neon-vfpv4/
+        
+    - name: Upload Packages Info
+      uses: actions/upload-artifact@master
+      with:
+        name: openwrt-brcm2708-bcm2709-rpi-2.manifest
+        path: openwrt/bin/targets/brcm2708/bcm2709/openwrt-brcm2708-bcm2709-rpi-2.manifest
+        
+    - name: Upload Kernel Packages
+      uses: actions/upload-artifact@master
+      with:
+        name: Kernel Packages
+        path: openwrt/bin/targets/brcm2708/bcm2709/packages/
+        
+    - name: Upload RootFS Archive
+      uses: actions/upload-artifact@master
+      with:
+        name: openwrt-brcm2708-bcm2709-rpi-2-rootfs.tar.gz
+        path: openwrt/bin/targets/brcm2708/bcm2709/openwrt-brcm2708-bcm2709-rpi-2-rootfs.tar.gz
+        
+    - name: Upload SquashFS Factory Image
+      uses: actions/upload-artifact@master
+      with:
+        name: openwrt-brcm2708-bcm2709-rpi-2-squashfs-factory.img.gz
+        path: openwrt/bin/targets/brcm2708/bcm2709/openwrt-brcm2708-bcm2709-rpi-2-squashfs-factory.img.gz
+        
+    - name: Upload SquashFS Sysupgrade Image
+      uses: actions/upload-artifact@master
+      with:
+        name: openwrt-brcm2708-bcm2709-rpi-2-squashfs-sysupgrade.img.gz
+        path: openwrt/bin/targets/brcm2708/bcm2709/openwrt-brcm2708-bcm2709-rpi-2-squashfs-sysupgrade.img.gz
+        
+    - name: Upload Ext4 Factory Image
+      uses: actions/upload-artifact@master
+      with:
+        name: openwrt-brcm2708-bcm2709-rpi-2-ext4-factory.img.gz
+        path: openwrt/bin/targets/brcm2708/bcm2709/openwrt-brcm2708-bcm2709-rpi-2-ext4-factory.img.gz
+        
+    - name: Upload Ext4 Sysupgrade Image
+      uses: actions/upload-artifact@master
+      with:
+        name: openwrt-brcm2708-bcm2709-rpi-2-ext4-sysupgrade.img.gz
+        path: openwrt/bin/targets/brcm2708/bcm2709/openwrt-brcm2708-bcm2709-rpi-2-ext4-sysupgrade.img.gz
+        
+    - name: Upload Images SHA256SUMS
+      uses: actions/upload-artifact@master
+      with:
+        name: sha256sums
+        path: openwrt/bin/targets/brcm2708/bcm2709/sha256sums
