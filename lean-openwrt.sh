@@ -9,8 +9,8 @@
 #sed -i 's/192.168.1.1/192.168.50.5/g' package/base-files/files/bin/config_generate
 
 # Clone community packages to package/community
-mkdir openwrt/package/community
-cd openwrt/package/community
+mkdir package/community
+cd package/community
 
 # Add mentohust & luci-app-mentohust.
 git clone https://github.com/BoringCat/luci-app-mentohust
@@ -56,6 +56,3 @@ sed -i 's/config internal themes/config internal themes\n    option Argon  \"\/l
 
 # Remove bootstrap theme
 sed -i '/set luci.main.mediaurlbase=\/luci-static\/bootstrap/d' feeds/luci/themes/luci-theme-bootstrap/root/etc/uci-defaults/30_luci-theme-bootstrap
-
-# Add Lienol's feeds
-echo "src-git lienol https://github.com/Lienol/openwrt-package" >> feeds.conf.default
