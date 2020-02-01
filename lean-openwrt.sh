@@ -48,6 +48,7 @@ git clone https://github.com/jerrykuku/luci-theme-argon
 rm -rf ../lean/luci-theme-argon
 
 # Change timezone
+cd ../..
 sed -i "s/'UTC'/'CST-8'\n        set system.@system[-1].zonename='Asia\/Shanghai'/g" package/base-files/files/bin/config_generate
 
 # Change default theme
@@ -57,5 +58,4 @@ sed -i 's/config internal themes/config internal themes\n    option Argon  \"\/l
 sed -i '/set luci.main.mediaurlbase=\/luci-static\/bootstrap/d' feeds/luci/themes/luci-theme-bootstrap/root/etc/uci-defaults/30_luci-theme-bootstrap
 
 # Add Lienol's feeds
-cd ../..
 echo "src-git lienol https://github.com/Lienol/openwrt-package" >> feeds.conf.default
