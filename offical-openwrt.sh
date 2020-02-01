@@ -9,7 +9,7 @@
 #sed -i 's/192.168.1.1/192.168.50.5/g' package/base-files/files/bin/config_generate
 
 # Clone Lean's latest sources. (use --depth=1) 
-cd openwrt/package
+cd package
 git clone --depth=1 https://github.com/coolsnowwolf/lede
 
 # Copy Lean's packages to ./package/lean.
@@ -78,6 +78,3 @@ sed -i 's/config internal themes/config internal themes\n    option Argon  \"\/l
 
 # Remove bootstrap theme
 sed -i '/set luci.main.mediaurlbase=\/luci-static\/bootstrap/d' feeds/luci/themes/luci-theme-bootstrap/root/etc/uci-defaults/30_luci-theme-bootstrap
-
-# Add Lienol's feeds.
-echo "src-git lienol https://github.com/Lienol/openwrt-package" >> feeds.conf.default
