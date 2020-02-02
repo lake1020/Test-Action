@@ -12,14 +12,8 @@ on:
   release:
     types: [published]
   push:
-    branches: 
-      - master
-    paths:
-      - 'rpi3-lean-openwrt.config'
-#  schedule:
-#    - cron: 0 8 * * 5
-  watch:
-    types: [started]
+    tags:
+    - 'v*'
 
 jobs:
   build:
@@ -94,62 +88,130 @@ jobs:
         cd openwrt
         make -j1 V=s
 
+    - name: Compress Packages
+      run: |
+        cd openwrt/bin/
+        zip -r packages.zip packages
+        cd targets/brcm2708/bcm2710/
+        zip -r kernel-packages.zip packages
+        
+    - name: Create Release
+      id: create-release
+      uses: actions/create-release@v1.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
     - name: Upload Config
-      uses: actions/upload-artifact@master
+      id: upload-config
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: config.seed
-        path: openwrt/bin/targets/brcm2708/bcm2710/config.seed
-        
-    - name: Upload Packages
-      uses: actions/upload-artifact@master
-      with:
-        name: Packages
-        path: openwrt/bin/packages/aarch64_cortex-a53/
-        
+        upload_url: ${{ steps.create_release.outputs.upload_url }}  
+        asset_path: openwrt/bin/targets/brcm2708/bcm2710/config.seed
+        asset_name: rpi3-lean-config.seed
+        asset_content_type: text/plain
+
     - name: Upload Packages Info
-      uses: actions/upload-artifact@master
+      id: upload-package-info
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: openwrt-brcm2708-bcm2710-rpi-3.manifest
-        path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3.manifest
-        
-    - name: Upload Kernel Packages
-      uses: actions/upload-artifact@master
+        upload_url: ${{ steps.create_release.outputs.upload_url }}  
+        asset_path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3.manifest
+        asset_name: rpi3-lean-openwrt-brcm2708-bcm2710.manifest
+        asset_content_type: text/plain
+
+    - name: Upload Sha256sums
+      id: upload-sha256sums
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: Kernel Packages
-        path: openwrt/bin/targets/brcm2708/bcm2710/packages/
-        
-    - name: Upload RootFS Archive
-      uses: actions/upload-artifact@master
+        upload_url: ${{ steps.create_release.outputs.upload_url }}  
+        asset_path: openwrt/bin/targets/brcm2708/bcm2710/sha256sums
+        asset_name: rpi3-lean-sha256sums
+        asset_content_type: text/plain
+
+    - name: Upload Squashfs Factory Image
+      id: upload-squashfs-factory-image
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: openwrt-brcm2708-bcm2710-rpi-3-rootfs.tar.gz
-        path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-rootfs.tar.gz
-        
-    - name: Upload SquashFS Factory Image
-      uses: actions/upload-artifact@master
+        upload_url: ${{ steps.create_release.outputs.upload_url }}  
+        asset_path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-squashfs-factory.img.gz
+        asset_name: rpi3-lean-openwrt-brcm2708-bcm2710-squashfs-factory.img.gz
+        asset_content_type: application/gzip
+
+    - name: Upload Squashfs Sysupgrade Image
+      id: upload-squashfs-sysupgrade-image
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: openwrt-brcm2708-bcm2710-rpi-3-squashfs-factory.img.gz.zip
-        path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-squashfs-factory.img.gz
-        
-    - name: Upload SquashFS Sysupgrade Image
-      uses: actions/upload-artifact@master
-      with:
-        name: openwrt-brcm2708-bcm2710-rpi-3-squashfs-sysupgrade.img.gz.zip
-        path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-squashfs-sysupgrade.img.gz
-        
+        upload_url: ${{ steps.create_release.outputs.upload_url }}  
+        asset_path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-squashfs-sysupgrade.img.gz
+        asset_name: rpi3-lean-openwrt-brcm2708-bcm2710-squashfs-sysupgrade.img.gz
+        asset_content_type: application/gzip
+
     - name: Upload Ext4 Factory Image
-      uses: actions/upload-artifact@master
+      id: upload-ext4-factory-image
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: openwrt-brcm2708-bcm2710-rpi-3-ext4-factory.img.gz.zip
-        path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-ext4-factory.img.gz
-        
+        upload_url: ${{ steps.create_release.outputs.upload_url }}  
+        asset_path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-ext4-factory.img.gz
+        asset_name: rpi3-lean-openwrt-brcm2708-bcm2710-ext4-factory.img.gz
+        asset_content_type: application/gzip
+
     - name: Upload Ext4 Sysupgrade Image
-      uses: actions/upload-artifact@master
+      id: upload-ext4-sysupgrade-image
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: openwrt-brcm2708-bcm2710-rpi-3-ext4-sysupgrade.img.gz.zip
-        path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-ext4-sysupgrade.img.gz
-        
-    - name: Upload Images Sha256sums
-      uses: actions/upload-artifact@master
+        upload_url: ${{ steps.create_release.outputs.upload_url }}  
+        asset_path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-ext4-sysupgrade.img.gz
+        asset_name: rpi3-lean-openwrt-brcm2708-bcm2710-ext4-sysupgrade.img.gz
+        asset_content_type: application/gzip
+
+    - name: Upload Rootfs Archive
+      id: upload-rootfs-archive
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: sha256sums
-        path: openwrt/bin/targets/brcm2708/bcm2710/sha256sums
+        upload_url: ${{ steps.create_release.outputs.upload_url }}  
+        asset_path: openwrt/bin/targets/brcm2708/bcm2710/openwrt-brcm2708-bcm2710-rpi-3-rootfs.tar.gz
+        asset_name: rpi3-lean-openwrt-brcm2708-bcm2710-rootfs.tar.gz
+        asset_content_type: application/gzip
+
+    - name: Upload Packages
+      id: upload-packages
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}  
+        asset_path: openwrt/bin/packages.zip
+        asset_name: rpi3-lean-packages.zip
+        asset_content_type: application/zip
+
+    - name: Upload Kernel Packages
+      id: upload-kernel-packages
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}  
+        asset_path: openwrt/bin/targets/brcm2708/bcm2710/packages.zip
+        asset_name: rpi3-lean-kernel-packages.zip
+        asset_content_type: application/zip
