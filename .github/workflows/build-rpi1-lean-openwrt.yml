@@ -97,8 +97,8 @@ jobs:
     - name: Extract Gzip Images
       run: |
         cd openwrt/bin/targets/brcm2708/bcm2708/
-        gzip openwrt-brcm2708-bcm2708-rpi-squashfs* -d
-        gzip openwrt-brcm2708-bcm2708-rpi-ext4* -d
+        gzip -q openwrt-brcm2708-bcm2708-rpi-squashfs* -d
+        gzip -q openwrt-brcm2708-bcm2708-rpi-ext4* -d
 
     - name: Upload Config
       uses: actions/upload-artifact@master
