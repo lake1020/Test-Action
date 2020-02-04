@@ -12,8 +12,14 @@ on:
   release:
     types: [published]
   push:
-    tags:
-    - 'v*'
+    branches: 
+      - master
+    paths:
+      - 'rpi4-lean-openwrt.config'
+  schedule:
+    - cron: 0 18 * * *
+#  watch:
+#    types: [started]
 
 jobs:
   build:
@@ -23,7 +29,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@master
 
-    - name: Initialization environment
+    - name: Initialization Environment
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -40,22 +46,22 @@ jobs:
         curl -fsSL https://raw.githubusercontent.com/P3TERX/dotfiles/master/.bashrc >> ~/.bashrc
         sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
-    - name: Clone source code
+    - name: Clone Source Code
       env: 
         REPO_URL: https://github.com/coolsnowwolf/lede
         REPO_BRANCH: master
       run: git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
 
-    - name: Update feeds
+    - name: Update Feeds
       run: |
        cd openwrt
        echo "src-git lienol https://github.com/Lienol/openwrt-package" >> feeds.conf.default
        ./scripts/feeds update -a
 
-    - name: Install feeds
+    - name: Install Feeds
       run: cd openwrt && ./scripts/feeds install -a
 
-    - name: Load custom configuration
+    - name: Load Custom Configuration
       env:
         CONFIG_FILE: 'rpi4-lean-openwrt.config'
         DIY_SH: 'lean-openwrt.sh'
@@ -67,151 +73,83 @@ jobs:
         ../$DIY_SH
         make defconfig
 
-#    - name: SSH connection to Actions
+#    - name: SSH Connection to Actions
 #      uses: P3TERX/debugger-action@master
 
-    - name: Download package
+    - name: Download Package
       run: |
         cd openwrt && make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
-    - name: Multi-thread compile
+    - name: Multi-Thread Compile
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
         make -j$(nproc)
 
-    - name: Single-thread compile
+    - name: Single-Thread Compile
       if: failure()
       run: |
         cd openwrt
         make -j1 V=s
 
-    - name: Compress Packages
-      run: |
-        cd openwrt/bin/
-        zip -r packages.zip packages
-        cd targets/brcm2708/bcm2711/
-        zip -r kernel-packages.zip packages
-        
-    - name: Create Release
-      id: create-release
-      uses: actions/create-release@v1.0.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
-
     - name: Upload Config
-      id: upload-config
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: actions/upload-artifact@master
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}  
-        asset_path: openwrt/bin/targets/brcm2708/bcm2711/config.seed
-        asset_name: rpi4-lean-config.seed
-        asset_content_type: text/plain
-
-    - name: Upload Packages Info
-      id: upload-package-info
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}  
-        asset_path: openwrt/bin/targets/brcm2708/bcm2711/openwrt-brcm2708-bcm2711-rpi-4.manifest
-        asset_name: rpi4-lean-openwrt-brcm2708-bcm2711.manifest
-        asset_content_type: text/plain
-
-    - name: Upload Sha256sums
-      id: upload-sha256sums
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}  
-        asset_path: openwrt/bin/targets/brcm2708/bcm2711/sha256sums
-        asset_name: rpi4-lean-sha256sums
-        asset_content_type: text/plain
-
-    - name: Upload Squashfs Factory Image
-      id: upload-squashfs-factory-image
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}  
-        asset_path: openwrt/bin/targets/brcm2708/bcm2711/openwrt-brcm2708-bcm2711-rpi-4-squashfs-factory.img.gz
-        asset_name: rpi4-lean-openwrt-brcm2708-bcm2711-squashfs-factory.img.gz
-        asset_content_type: application/gzip
-
-    - name: Upload Squashfs Sysupgrade Image
-      id: upload-squashfs-sysupgrade-image
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}  
-        asset_path: openwrt/bin/targets/brcm2708/bcm2711/openwrt-brcm2708-bcm2711-rpi-4-squashfs-sysupgrade.img.gz
-        asset_name: rpi4-lean-openwrt-brcm2708-bcm2711-squashfs-sysupgrade.img.gz
-        asset_content_type: application/gzip
-
-    - name: Upload Ext4 Factory Image
-      id: upload-ext4-factory-image
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}  
-        asset_path: openwrt/bin/targets/brcm2708/bcm2711/openwrt-brcm2708-bcm2711-rpi-4-ext4-factory.img.gz
-        asset_name: rpi4-lean-openwrt-brcm2708-bcm2711-ext4-factory.img.gz
-        asset_content_type: application/gzip
-
-    - name: Upload Ext4 Sysupgrade Image
-      id: upload-ext4-sysupgrade-image
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}  
-        asset_path: openwrt/bin/targets/brcm2708/bcm2711/openwrt-brcm2708-bcm2711-rpi-4-ext4-sysupgrade.img.gz
-        asset_name: rpi4-lean-openwrt-brcm2708-bcm2711-ext4-sysupgrade.img.gz
-        asset_content_type: application/gzip
-
-    - name: Upload Rootfs Archive
-      id: upload-rootfs-archive
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}  
-        asset_path: openwrt/bin/targets/brcm2708/bcm2711/openwrt-brcm2708-bcm2711-rpi-4-rootfs.tar.gz
-        asset_name: rpi4-lean-openwrt-brcm2708-bcm2711-rootfs.tar.gz
-        asset_content_type: application/gzip
-
+        name: config.seed
+        path: openwrt/bin/targets/brcm2708/bcm2711/config.seed
+        
     - name: Upload Packages
-      id: upload-packages
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: actions/upload-artifact@master
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}  
-        asset_path: openwrt/bin/packages.zip
-        asset_name: rpi4-lean-packages.zip
-        asset_content_type: application/zip
-
+        name: packages
+        path: openwrt/bin/packages/aarch64_cortex-a72/
+        
+    - name: Upload Packages Info
+      uses: actions/upload-artifact@master
+      with:
+        name: openwrt-brcm2708-bcm2711-rpi-4.manifest
+        path: openwrt/bin/targets/brcm2708/bcm2711/openwrt-brcm2708-bcm2711-rpi-4.manifest
+        
     - name: Upload Kernel Packages
-      id: upload-kernel-packages
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: actions/upload-artifact@master
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}  
-        asset_path: openwrt/bin/targets/brcm2708/bcm2711/packages.zip
-        asset_name: rpi4-lean-kernel-packages.zip
-        asset_content_type: application/zip
+        name: kernel-packages
+        path: openwrt/bin/targets/brcm2708/bcm2711/packages/
+        
+    - name: Upload RootFS Archive
+      uses: actions/upload-artifact@master
+      with:
+        name: openwrt-brcm2708-bcm2711-rpi-4-rootfs.tar.gz
+        path: openwrt/bin/targets/brcm2708/bcm2711/openwrt-brcm2708-bcm2711-rpi-4-rootfs.tar.gz
+        
+    - name: Upload SquashFS Factory Image
+      uses: actions/upload-artifact@master
+      with:
+        name: openwrt-brcm2708-bcm2711-rpi-4-squashfs-factory.img
+        path: openwrt/bin/targets/brcm2708/bcm2711/openwrt-brcm2708-bcm2711-rpi-4-squashfs-factory.img
+        
+    - name: Upload SquashFS Sysupgrade Image
+      uses: actions/upload-artifact@master
+      with:
+        name: openwrt-brcm2708-bcm2711-rpi-4-squashfs-sysupgrade.img
+        path: openwrt/bin/targets/brcm2708/bcm2711/openwrt-brcm2708-bcm2711-rpi-4-squashfs-sysupgrade.img
+        
+    - name: Upload Ext4 Factory Image
+      uses: actions/upload-artifact@master
+      with:
+        name: openwrt-brcm2708-bcm2711-rpi-4-ext4-factory.img
+        path: openwrt/bin/targets/brcm2708/bcm2711/openwrt-brcm2708-bcm2711-rpi-4-ext4-factory.img
+        
+    - name: Upload Ext4 Sysupgrade Image
+      uses: actions/upload-artifact@master
+      with:
+        name: openwrt-brcm2708-bcm2711-rpi-4-ext4-sysupgrade.img
+        path: openwrt/bin/targets/brcm2708/bcm2711/openwrt-brcm2708-bcm2711-rpi-4-ext4-sysupgrade.img
+        
+    - name: Upload Images SHA256SUMS
+      uses: actions/upload-artifact@master
+      with:
+        name: sha256sums
+        path: openwrt/bin/targets/brcm2708/bcm2711/sha256sums

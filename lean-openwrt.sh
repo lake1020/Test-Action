@@ -56,3 +56,7 @@ sed -i 's/config internal themes/config internal themes\n    option Argon  \"\/l
 
 # Remove bootstrap theme
 sed -i '/set luci.main.mediaurlbase=\/luci-static\/bootstrap/d' feeds/luci/themes/luci-theme-bootstrap/root/etc/uci-defaults/30_luci-theme-bootstrap
+
+# Disable image compress (only for Raspberry Pi)
+sed -i 's/ | gzip//g' target/linux/brcm2708/image/Makefile
+sed -i 's/.gz//g' target/linux/brcm2708/image/Makefile
