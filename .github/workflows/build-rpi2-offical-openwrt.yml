@@ -99,6 +99,12 @@ jobs:
       with:
         name: config.buildinfo
         path: openwrt/bin/targets/brcm2708/bcm2709/config.buildinfo
+
+    - name: Upload Images Sha256sums
+      uses: actions/upload-artifact@master
+      with:
+        name: sha256sums
+        path: openwrt/bin/targets/brcm2708/bcm2709/sha256sums
         
     - name: Upload Packages
       uses: actions/upload-artifact@master
@@ -147,9 +153,3 @@ jobs:
       with:
         name: openwrt-brcm2708-bcm2709-rpi-2-ext4-sysupgrade.img
         path: openwrt/bin/targets/brcm2708/bcm2709/openwrt-brcm2708-bcm2709-rpi-2-ext4-sysupgrade.img
-        
-    - name: Upload Images Sha256sums
-      uses: actions/upload-artifact@master
-      with:
-        name: sha256sums
-        path: openwrt/bin/targets/brcm2708/bcm2709/sha256sums
