@@ -106,7 +106,7 @@ jobs:
       run: |
         cd openwrt/bin/targets/brcm2708/bcm2709
         rm -rf sha256sums
-        sha256sums openwrt* > sha256sums
+        sha256sum openwrt* > sha256sums
 
     - name: Upload Config
       uses: actions/upload-artifact@master
