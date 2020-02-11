@@ -22,7 +22,7 @@ on:
 #    types: [started]
 
 env:
-  REPO_URL: https://github.com/project-openwrt/openwrt-latest
+  REPO_URL: https://github.com/openwrt/openwrt
   REPO_BRANCH: master
   CONFIG_FILE: rpi2-offical-openwrt.config
   DIY_SH: offical-openwrt.sh
