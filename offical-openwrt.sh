@@ -80,4 +80,4 @@ sed -i '/set luci.main.mediaurlbase=\/luci-static\/bootstrap/d' feeds/luci/theme
 # Convert Translation
 cp ../convert_translation.sh .
 chmod +x ./convert_translation.sh
-bash ./convert_translation.sh
+./convert_translation.sh || true
